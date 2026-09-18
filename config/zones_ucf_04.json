@@ -1,0 +1,14 @@
+{
+  "model": "yolov8n.pt",
+  "min_confidence": 0.35,
+  "loitering_seconds": 5.0,
+  "intrusion_enabled": true,
+  "event_dedup_frames": 30,
+  "zones": [
+    {
+      "id": "restricted_lift_entry",
+      "label": "Restricted Lift Entry",
+      "points": [[0.42, 0.16], [0.70, 0.16], [0.76, 0.34], [0.66, 0.46], [0.46, 0.42]]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "model": "yolov8n.pt",
+  "min_confidence": 0.35,
+  "loitering_seconds": 5.0,
+  "intrusion_enabled": true,
+  "event_dedup_frames": 30,
+  "zones": [
+    {
+      "id": "restricted_checkout_counter",
+      "label": "Restricted Checkout Counter",
+      "points": [[0.00, 0.20], [0.43, 0.20], [0.55, 0.72], [0.34, 0.96], [0.00, 0.82]]
+    }
+  ]
+}

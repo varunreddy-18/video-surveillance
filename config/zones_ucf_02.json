@@ -1,0 +1,14 @@
+{
+  "model": "yolov8n.pt",
+  "min_confidence": 0.35,
+  "loitering_seconds": 5.0,
+  "intrusion_enabled": true,
+  "event_dedup_frames": 30,
+  "zones": [
+    {
+      "id": "restricted_central_aisle",
+      "label": "Restricted Central Aisle",
+      "points": [[0.25, 0.28], [0.70, 0.28], [0.82, 0.92], [0.20, 0.92]]
+    }
+  ]
+}
