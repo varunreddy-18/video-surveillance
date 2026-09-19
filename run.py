@@ -1,4 +1,5 @@
 import argparse
+import json
 from pathlib import Path
 
 from src.video_processor import (
@@ -9,7 +10,9 @@ from src.video_processor import (
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Video surveillance pipeline")
+    parser = argparse.ArgumentParser(
+        description="Detect and track people, zones, and events in MP4 video."
+    )
     parser.add_argument("--video", help="Input MP4 path")
     parser.add_argument("--all", action="store_true", help="Process all input MP4 files")
     parser.add_argument("--zones", help="Zone JSON for --video")
@@ -59,8 +62,33 @@ def main():
             print(
                 f"{video.name}: frames={stats['frame_count']}/{stats['source_frames']} "
                 f"fps={stats['fps']:.2f} duration={stats['duration']:.2f}s "
-                f"processing={stats['processing_seconds']:.2f}s events={stats['event_count']}"
+                f"processing={stats['processing_seconds']:.2f}s "
+                f"processed_fps={stats['processed_fps']:.2f} "
+                f"tracks={stats['unique_track_count']} events={stats['event_count']}"
             )
+            metrics_path = output_dir / f"{video.stem}_metrics.json"
+            metrics_path.write_text(
+                json.dumps(
+                    {
+                        "video": video.name,
+                        "input_fps": stats["fps"],
+                        "processed_fps": stats["processed_fps"],
+                        "total_frames": stats["source_frames"],
+                        "processed_frames": stats["frame_count"],
+                        "processing_seconds": stats["processing_seconds"],
+                        "unique_tracked_people": stats["unique_track_count"],
+                        "intrusion_events": stats["intrusion_event_count"],
+                        "loitering_events": stats["loitering_event_count"],
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+            if len(videos) == 1:
+                (output_dir / "metrics.json").write_text(
+                    metrics_path.read_text(encoding="utf-8"),
+                    encoding="utf-8",
+                )
         except Exception as exc:
             failures += 1
             print(f"{video.name}: FAILED: {exc}")

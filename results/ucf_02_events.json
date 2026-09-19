@@ -1,0 +1,226 @@
+[
+  {
+    "frame_number": 42,
+    "timestamp": 1.367,
+    "bbox": [
+      43.59,
+      82.24,
+      104.6,
+      183.02
+    ],
+    "track_id": 1,
+    "event_type": "zone_intrusion",
+    "confidence": 0.779,
+    "zone_id": "restricted_central_aisle"
+  },
+  {
+    "frame_number": 235,
+    "timestamp": 7.8,
+    "bbox": [
+      157.23,
+      84.94,
+      211.75,
+      206.18
+    ],
+    "track_id": 1,
+    "event_type": "loitering",
+    "confidence": 0.923,
+    "zone_id": "restricted_central_aisle"
+  },
+  {
+    "frame_number": 383,
+    "timestamp": 12.733,
+    "bbox": [
+      64.93,
+      41.89,
+      98.61,
+      92.55
+    ],
+    "track_id": 2,
+    "event_type": "zone_intrusion",
+    "confidence": 0.463,
+    "zone_id": "restricted_central_aisle"
+  },
+  {
+    "frame_number": 433,
+    "timestamp": 14.4,
+    "bbox": [
+      63.32,
+      42.64,
+      97.11,
+      91.89
+    ],
+    "track_id": 2,
+    "event_type": "zone_intrusion",
+    "confidence": 0.468,
+    "zone_id": "restricted_central_aisle"
+  },
+  {
+    "frame_number": 433,
+    "timestamp": 14.4,
+    "bbox": [
+      63.32,
+      42.64,
+      97.11,
+      91.89
+    ],
+    "track_id": 2,
+    "event_type": "loitering",
+    "confidence": 0.468,
+    "zone_id": "restricted_central_aisle"
+  },
+  {
+    "frame_number": 567,
+    "timestamp": 18.867,
+    "bbox": [
+      48.17,
+      69.65,
+      104.26,
+      168.2
+    ],
+    "track_id": 3,
+    "event_type": "zone_intrusion",
+    "confidence": 0.872,
+    "zone_id": "restricted_central_aisle"
+  },
+  {
+    "frame_number": 716,
+    "timestamp": 23.833,
+    "bbox": [
+      69.99,
+      63.93,
+      108.57,
+      166.59
+    ],
+    "track_id": 3,
+    "event_type": "loitering",
+    "confidence": 0.882,
+    "zone_id": "restricted_central_aisle"
+  },
+  {
+    "frame_number": 901,
+    "timestamp": 30.0,
+    "bbox": [
+      165.64,
+      46.57,
+      226.65,
+      106.12
+    ],
+    "track_id": 5,
+    "event_type": "zone_intrusion",
+    "confidence": 0.851,
+    "zone_id": "restricted_central_aisle"
+  },
+  {
+    "frame_number": 1495,
+    "timestamp": 49.8,
+    "bbox": [
+      39.28,
+      71.2,
+      111.2,
+      173.02
+    ],
+    "track_id": 1,
+    "event_type": "zone_intrusion",
+    "confidence": 0.842,
+    "zone_id": "restricted_central_aisle"
+  },
+  {
+    "frame_number": 1555,
+    "timestamp": 51.8,
+    "bbox": [
+      52.47,
+      67.26,
+      96.86,
+      170.5
+    ],
+    "track_id": 8,
+    "event_type": "zone_intrusion",
+    "confidence": 0.851,
+    "zone_id": "restricted_central_aisle"
+  },
+  {
+    "frame_number": 1632,
+    "timestamp": 54.367,
+    "bbox": [
+      47.28,
+      78.69,
+      100.55,
+      178.17
+    ],
+    "track_id": 8,
+    "event_type": "zone_intrusion",
+    "confidence": 0.846,
+    "zone_id": "restricted_central_aisle"
+  },
+  {
+    "frame_number": 1648,
+    "timestamp": 54.9,
+    "bbox": [
+      97.12,
+      67.49,
+      148.26,
+      182.58
+    ],
+    "track_id": 1,
+    "event_type": "loitering",
+    "confidence": 0.912,
+    "zone_id": "restricted_central_aisle"
+  },
+  {
+    "frame_number": 1666,
+    "timestamp": 55.5,
+    "bbox": [
+      58.64,
+      68.11,
+      110.91,
+      179.21
+    ],
+    "track_id": 8,
+    "event_type": "loitering",
+    "confidence": 0.825,
+    "zone_id": "restricted_central_aisle"
+  },
+  {
+    "frame_number": 2037,
+    "timestamp": 67.867,
+    "bbox": [
+      53.2,
+      66.99,
+      99.35,
+      178.04
+    ],
+    "track_id": 10,
+    "event_type": "zone_intrusion",
+    "confidence": 0.762,
+    "zone_id": "restricted_central_aisle"
+  },
+  {
+    "frame_number": 2185,
+    "timestamp": 72.8,
+    "bbox": [
+      47.28,
+      66.94,
+      105.95,
+      177.05
+    ],
+    "track_id": 10,
+    "event_type": "zone_intrusion",
+    "confidence": 0.514,
+    "zone_id": "restricted_central_aisle"
+  },
+  {
+    "frame_number": 2194,
+    "timestamp": 73.1,
+    "bbox": [
+      69.43,
+      68.73,
+      91.27,
+      105.7
+    ],
+    "track_id": 11,
+    "event_type": "zone_intrusion",
+    "confidence": 0.67,
+    "zone_id": "restricted_central_aisle"
+  }
+]

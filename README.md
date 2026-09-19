@@ -2,9 +2,9 @@
 
 A lightweight video surveillance pipeline that analyzes CCTV footage to detect and track people, identify unauthorized entry into defined zones, and detect prolonged stationary behavior.
 
-The system combines **YOLOv8 person detection**, **Ultralytics ByteTrack tracking**, and **camera-specific polygon zones** to perform temporal event analysis. Each video is processed frame-by-frame, maintaining tracking state across frames so that events such as intrusion and loitering can be detected reliably.
+The system combines **YOLOv8n person detection**, **Ultralytics ByteTrack tracking**, and **camera-specific polygon zones** to perform temporal event analysis. It detects zone intrusions, loitering, and produces annotated video, structured event logs, and processing metrics.
 
-For every processed video, the system generates an **annotated MP4** containing detections, tracking IDs, zones, and event labels, along with a **structured JSON event log**.
+For every processed video, the system generates an **annotated MP4** containing detections, tracking IDs, zones, and event labels, along with a **structured JSON event log** and metrics JSON.
 
 This implementation is designed as a CPU-capable prototype and is not production deployed.
 
@@ -122,7 +122,7 @@ Coordinates are normalized between `0.0` and `1.0`, making the zones independent
 
 ```mermaid
 flowchart TD
-    A[Tracked Person] --> B[Bounding Box Center]
+    A[Tracked Person] --> B[Bottom-Center Point]
     B --> C[Point-in-Polygon Test]
 
     C --> D{Inside Zone?}
@@ -134,7 +134,7 @@ flowchart TD
     F --> G
 ```
 
-The center point of the person's bounding box is used for zone membership.
+The bottom-center point of the person's bounding box is used for zone membership because it better approximates the person's position on the ground plane.
 
 ### 6. Intrusion Detection
 
@@ -177,7 +177,7 @@ flowchart TD
 
 A loitering event is emitted when the configured stationary duration is reached.
 
-Only one alert is generated during a continuous loitering period. Leaving the zone resets the alert state.
+Only one alert is generated during a continuous loitering period. The configurable movement threshold determines whether a track is stationary, the track timeout tolerates temporary disappearance, and event deduplication suppresses repeated alerts. Leaving the zone resets the alert state.
 
 ### 8. Event Processing
 
@@ -217,6 +217,8 @@ The system simultaneously writes:
 Annotated MP4
        +
 JSON Event Log
+       +
+Metrics JSON
 ```
 
 ---
@@ -290,6 +292,7 @@ Each camera has an independent JSON configuration.
   "loitering_seconds": 5.0,
   "intrusion_enabled": true,
   "event_dedup_frames": 30,
+  "movement_threshold_pixels": 3.0,
   "track_state_timeout_seconds": 5.0,
   "zones": [
     {
@@ -314,6 +317,7 @@ Each camera has an independent JSON configuration.
 | `loitering_seconds`           | Required stationary duration        |
 | `intrusion_enabled`           | Enables intrusion detection         |
 | `event_dedup_frames`          | Duplicate-event suppression window  |
+| `movement_threshold_pixels`   | Maximum movement treated as stationary |
 | `track_state_timeout_seconds` | Stale-track cleanup timeout         |
 | `zones`                       | Camera-specific polygon definitions |
 
@@ -325,27 +329,61 @@ Zones require a valid ID, label, at least three points, and normalized coordinat
 
 The validated environment uses Python 3.10.
 
-Clone the repository and enter the project directory:
+### 1. Clone the repository
 
+```bash
 git clone <repository-url>
 cd video-surveillance
+```
 
-Create and activate a virtual environment:
+### 2. Create a virtual environment
 
+Windows PowerShell:
+
+```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
+```
 
-Install the required dependencies:
+Linux/macOS:
 
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
 python -m pip install -r requirements.txt
+```
 
-Dependencies:
+Dependencies are limited to `ultralytics`, `opencv-python`, and `numpy`.
 
-The project uses:
+## Quick Start
 
-ultralytics
-opencv-python
-numpy
+```powershell
+python run.py --video input/ucf_02.mp4 --zones config/zones_ucf_02.json --output results/
+```
+
+This single command performs video reading, detection, tracking, zone
+evaluation, event detection, annotation, JSON event logging, and metrics
+generation.
+
+## Demo
+
+The repository includes representative input and generated outputs:
+
+```text
+input/ucf_02.mp4
+results/
+├── ucf_02_annotated.mp4
+└── ucf_02_events.json
+```
+
+The MP4 shows detections, track IDs, confidence, zones, and event labels. The
+event JSON contains event records. Running the command also creates
+`ucf_02_metrics.json` with processing metrics.
 
 ---
 
@@ -360,7 +398,7 @@ python run.py --video input/VIRAT_01.mp4 --zones config/zones_virat.json --outpu
 ## Process UCF_02
 
 ```powershell
-python run.py --video input/UCF_02.mp4 --zones config/zones_ucf_02.json --output results/
+python run.py --video input/ucf_02.mp4 --zones config/zones_ucf_02.json --output results/
 ```
 
 ## Process all videos
@@ -376,7 +414,8 @@ Each successful video produces:
 ```text
 results/
 ├── <video_name>_annotated.mp4
-└── <video_name>_events.json
+├── <video_name>_events.json
+└── <video_name>_metrics.json
 ```
 
 ---
@@ -457,13 +496,20 @@ If no events occur, the output remains valid JSON:
 
 The following are CPU prototype measurements and are **not real-time benchmarks**.
 
-| Video    | Frames | Source FPS | Processing Time |
+Latest validated run:
+
+| Video    | Frames | Input FPS | Processing FPS | Processing Time | Tracks | Events |
+| -------- | -----: | --------: | -------------: | --------------: | -----: | -----: |
+| VIRAT_01 | 584/584 | 23.97 | 10.58 | 55.17 s | 24 | 3 |
+
+Historical CPU measurements for the other videos:
+
+| Video    | Frames | Input FPS | Processing Time |
 | -------- | -----: | ---------: | --------------: |
-| VIRAT_01 |    584 |      23.97 |          ~112 s |
-| UCF_01   |  3,600 |         30 |          ~526 s |
-| UCF_02   |  2,229 |         30 |          ~491 s |
-| UCF_03   |  1,626 |         30 |          ~279 s |
-| UCF_04   |    864 |         30 |          ~143 s |
+| UCF_01   | 3,600 | 30 | ~526 s |
+| UCF_02   | 2,229 | 30 | ~491 s |
+| UCF_03   | 1,626 | 30 | ~279 s |
+| UCF_04   | 864 | 30 | ~143 s |
 
 Frames are processed sequentially, so the entire video is not loaded into memory.
 
@@ -475,8 +521,8 @@ GPU inference would provide substantially higher throughput.
 
 * YOLOv8n is pretrained and not fine-tuned for the target CCTV footage.
 * Small, distant, blurred, or heavily occluded people may be missed.
-* ByteTrack IDs can switch during difficult tracking conditions.
-* Zone membership is based on the bounding-box center and is therefore boundary-sensitive.
+* ByteTrack provides temporal track association but does not provide full appearance-based person re-identification; IDs can switch during difficult tracking conditions.
+* Zone membership is based on the bottom-center of the bounding box and is therefore boundary-sensitive.
 * Zones must be manually configured for each camera.
 * Loitering behavior depends on configurable movement and duration thresholds.
 * Events are currently stored as JSON rather than a persistent database.
@@ -490,8 +536,18 @@ GPU inference would provide substantially higher throughput.
 The pipeline can be syntax-checked with:
 
 ```powershell
+python run.py --help
 python -m py_compile run.py src/*.py
 ```
+
+Configuration JSON files were validated, and the latest end-to-end VIRAT_01
+run completed successfully:
+
+* 584 / 584 frames
+* 23.97 input FPS
+* 55.17 seconds processing time
+* 24 unique tracks
+* 3 events
 
 Validation should use the same:
 
@@ -502,3 +558,11 @@ Validation should use the same:
 * CLI parameters
 
 Event counts may vary with hardware, model version, thresholds, and video characteristics.
+
+---
+
+# Future Improvements
+
+Potential production improvements include GPU deployment, persistent event
+storage, external alert delivery, centralized multi-camera orchestration,
+automated zone management, and domain-specific model fine-tuning.

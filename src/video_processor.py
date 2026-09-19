@@ -32,7 +32,13 @@ def load_zones(path: str | Path, width: int, height: int):
         raise ValueError(f"Invalid zone config {path}: {exc}") from exc
     if not isinstance(config, dict):
         raise ValueError(f"Zone config must be a JSON object: {path}")
-    for key in ("min_confidence", "loitering_seconds", "event_dedup_frames"):
+    for key in (
+        "min_confidence",
+        "loitering_seconds",
+        "event_dedup_frames",
+        "movement_threshold_pixels",
+        "track_state_timeout_seconds",
+    ):
         if key in config:
             try:
                 value = float(config[key])
@@ -125,11 +131,15 @@ def process_video(video_path, zones_path, output_dir, model_name="yolov8n.pt"):
         raise ValueError(f"Invalid video metadata: {video_path}")
 
     zones, config = load_zones(zones_path, width, height)
-    detector = PersonDetector(
-        model_name=config.get("model", model_name),
-        confidence=float(config.get("min_confidence", 0.35)),
-    )
-    logger = EventLogger(config.get("event_dedup_frames", 4))
+    try:
+        detector = PersonDetector(
+            model_name=config.get("model", model_name),
+            confidence=float(config.get("min_confidence", 0.35)),
+        )
+        logger = EventLogger(config.get("event_dedup_frames", 4))
+    except Exception:
+        cap.release()
+        raise
     output_video = output_dir / f"{video_path.stem}_annotated.mp4"
     writer = cv2.VideoWriter(
         str(output_video),
@@ -143,7 +153,11 @@ def process_video(video_path, zones_path, output_dir, model_name="yolov8n.pt"):
 
     track_state = {}
     stale_limit = max(1, int(float(config.get("track_state_timeout_seconds", 2.0)) * fps))
+    movement_threshold = max(
+        0.0, float(config.get("movement_threshold_pixels", 3.0))
+    )
     frame_count = 0
+    unique_track_ids = set()
 
     try:
         while True:
@@ -164,7 +178,10 @@ def process_video(video_path, zones_path, output_dir, model_name="yolov8n.pt"):
                 if track_id is None:
                     continue
                 active_ids.add(track_id)
-                center = detection["center"]
+                unique_track_ids.add(track_id)
+                x1, _, x2, y2 = detection["bbox"]
+                center = ((x1 + x2) / 2.0, y2)
+                detection["center"] = center
                 zone_ids = {
                     zone["id"]
                     for zone in zones
@@ -185,7 +202,7 @@ def process_video(video_path, zones_path, output_dir, model_name="yolov8n.pt"):
                 if state["last_center"] is not None:
                     dx = center[0] - state["last_center"][0]
                     dy = center[1] - state["last_center"][1]
-                    if (dx * dx + dy * dy) ** 0.5 <= 3.0:
+                    if (dx * dx + dy * dy) ** 0.5 <= movement_threshold:
                         state["stationary_seconds"] += 1.0 / fps
                     else:
                         state["stationary_seconds"] = 0.0
@@ -237,6 +254,14 @@ def process_video(video_path, zones_path, output_dir, model_name="yolov8n.pt"):
         "fps": fps,
         "duration": frame_count / fps,
         "processing_seconds": time.perf_counter() - started,
+        "processed_fps": frame_count / max(time.perf_counter() - started, 1e-9),
+        "unique_track_count": len(unique_track_ids),
+        "intrusion_event_count": sum(
+            event["event_type"] == "zone_intrusion" for event in logger.events
+        ),
+        "loitering_event_count": sum(
+            event["event_type"] == "loitering" for event in logger.events
+        ),
         "event_count": len(logger.events),
         "output_video": str(output_video),
         "output_json": str(events_path),
